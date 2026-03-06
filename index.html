@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Arduino Project</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>My Arduino Project</h1>
+
+<p>This website documents my Arduino project.</p>
+
+<h2>Project Description</h2>
+<p>This project uses Arduino to control sensors and actuators.</p>
+
+<h2>Components</h2>
+<ul>
+<li>Arduino Uno</li>
+<li>Breadboard</li>
+<li>LED</li>
+<li>Resistors</li>
+</ul>
+
+<h2>Circuit</h2>
+<img src="images/circuit.png" width="400">
+
+<h2>Arduino Code</h2>
+<pre>
+void setup() {
+ pinMode(13, OUTPUT);
+}
+
+void loop() {
+ digitalWrite(13, HIGH);
+ delay(1000);
+ digitalWrite(13, LOW);
+ delay(1000);
+}
+</pre>
+
+</body>
+</html>
