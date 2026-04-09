@@ -1,43 +1,1050 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>My Arduino Project</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartSys — Arduino Embedded Projects</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #050810;
+    --surface: #0c1120;
+    --card: #111827;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1rem 3rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(5,8,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--text); }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.45rem 1.2rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .nav-cta:hover { background: var(--accent); color: var(--bg); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 3rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 560px;
+    margin-bottom: 3rem;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,212,255,0.3); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.85rem 2rem;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* HERO STATS */
+  .hero-stats {
+    display: flex; gap: 3rem; margin-top: 4rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+    flex-wrap: wrap;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+  }
+
+  /* ── WOKWI EMBED SECTION ── */
+  .wokwi-section {
+    position: relative; z-index: 1;
+    padding: 6rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    max-width: 540px;
+    margin-bottom: 3rem;
+    font-weight: 300;
+  }
+
+  .wokwi-frame-wrapper {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow: 0 0 0 1px rgba(0,212,255,0.1), 0 40px 80px rgba(0,0,0,0.5);
+  }
+
+  .wokwi-frame-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1.2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ef4444; }
+  .dot-y { background: #f59e0b; }
+  .dot-g { background: #10b981; }
+  .wokwi-url {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .wokwi-frame-wrapper iframe {
+    width: 100%;
+    height: 600px;
+    border: none;
+    display: block;
+  }
+
+  .wokwi-open-btn {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+
+  /* ── CODE PANEL ── */
+  .code-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    overflow: auto;
+    max-height: 320px;
+  }
+  .code-panel pre {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+  .kw { color: #ff7b72; }
+  .fn { color: #79c0ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .nm { color: #ffa657; }
+  .str { color: #a5d6ff; }
+
+  /* ── TASKS GRID ── */
+  .tasks-section {
+    position: relative; z-index: 1;
+    padding: 6rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    cursor: default;
+  }
+  .task-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .task-card:hover::before { transform: scaleX(1); }
+  .task-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    border-color: var(--card-accent, var(--accent));
+  }
+
+  .task-num {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+
+  .task-icon {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    display: block;
+    line-height: 1;
+  }
+
+  .task-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .task-desc {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+  }
+
+  .task-tags {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+
+  .task-impl {
+    margin-top: 1.2rem;
+    padding: 1rem;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .task-impl-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .task-impl p {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* ── CIRCUIT DIAGRAM ── */
+  .circuit-section {
+    position: relative; z-index: 1;
+    padding: 6rem 3rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .circuit-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
+  .component-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.25s;
+  }
+  .component-card:hover { border-color: var(--accent3); transform: translateY(-2px); }
+  .component-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+  .component-name {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .component-role { font-size: 0.75rem; color: var(--muted); }
+  .component-pin {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--accent3);
+    margin-top: 0.4rem;
+  }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-section {
+    position: relative; z-index: 1;
+    padding: 6rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .flow-diagram {
+    margin-top: 3rem;
+    position: relative;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+  }
+
+  .flow-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+    transition: all 0.25s;
+  }
+  .flow-box:hover { border-color: var(--accent); }
+  .flow-box.accent { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+  .flow-box-icon { font-size: 1.5rem; display: block; margin-bottom: 0.25rem; }
+  .flow-box-title { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text); }
+  .flow-box-sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+
+  .flow-arrow {
+    color: var(--muted);
+    font-size: 1.2rem;
+    padding: 0 0.5rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 1;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+  .footer-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+  .footer-links { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .footer-links a { color: var(--muted); text-decoration: none; font-family: var(--font-mono); font-size: 0.8rem; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-copy { font-size: 0.75rem; color: var(--muted); font-family: var(--font-mono); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate { animation: fadeInUp 0.7s ease forwards; opacity: 0; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    max-width: 1200px;
+    margin: 0 auto;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero, .wokwi-section, .tasks-section, .flow-section { padding: 5rem 1.5rem 3rem; }
+    .circuit-section { padding: 4rem 1.5rem; }
+    footer { padding: 2rem 1.5rem; }
+    .hero-stats { gap: 2rem; }
+    .wokwi-frame-wrapper iframe { height: 400px; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* live indicator */
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--green);
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3);
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    margin-left: 1rem;
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+</style>
+</head>
 <body>
 
-<h1>My Arduino Project</h1>
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#"><em>Smart</em><span>Sys</span></a>
+  <ul class="nav-links">
+    <li><a href="#simulator">Simulator</a></li>
+    <li><a href="#tasks">Tasks</a></li>
+    <li><a href="#components">Hardware</a></li>
+    <li><a href="#flow">Logic</a></li>
+  </ul>
+  <a class="nav-cta" href="https://wokwi.com/projects/460857399417980929" target="_blank">Open Wokwi ↗</a>
+</nav>
 
-<p>This website documents my Arduino project.</p>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag animate delay-1">Arduino Embedded Systems Project</div>
+  <h1 class="animate delay-2">
+    Smart<br/><em>Integrated</em><br/>System
+  </h1>
+  <p class="hero-sub animate delay-3">
+    An all-in-one Arduino-based platform combining environmental sensing, user interaction, display output, alerting, and motion control — built and simulated on Wokwi.
+  </p>
+  <div class="hero-actions animate delay-4">
+    <a class="btn-primary" href="https://wokwi.com/projects/460857399417980929" target="_blank">
+      ▶ Run Simulation
+    </a>
+    <a class="btn-outline" href="#tasks">
+      → Explore Tasks
+    </a>
+  </div>
+  <div class="hero-stats animate delay-5">
+    <div class="stat-item">
+      <div class="stat-num">8</div>
+      <div class="stat-label">System Tasks</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Components</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">1</div>
+      <div class="stat-label">Unified Platform</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">C++</div>
+      <div class="stat-label">Language</div>
+    </div>
+  </div>
+</section>
 
-<h2>Project Description</h2>
-<p>This project uses Arduino to control sensors and actuators.</p>
+<!-- WOKWI EMBED -->
+<section class="wokwi-section" id="simulator">
+  <p class="section-label animate">Live Simulation</p>
+  <h2 class="section-title animate delay-1">Interactive Wokwi<br/>Simulator</h2>
+  <p class="section-desc animate delay-2">
+    Run the complete Arduino smart system directly in your browser. Interact with the button, watch temperature alerts, and observe the LCD display in real-time.
+    <span class="live-badge"><span class="live-dot"></span>Live</span>
+  </p>
 
-<h2>Components</h2>
-<ul>
-<li>Arduino Uno</li>
-<li>Breadboard</li>
-<li>LED</li>
-<li>Resistors</li>
-</ul>
+  <div class="wokwi-frame-wrapper animate delay-3">
+    <div class="wokwi-frame-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="wokwi-url">wokwi.com/projects/460857399417980929</span>
+    </div>
+    <iframe
+      src="https://wokwi.com/projects/460857399417980929"
+      title="Smart System Simulator"
+      allow="fullscreen"
+      loading="lazy">
+    </iframe>
+  </div>
 
-<h2>Circuit</h2>
-<img src="images/circuit.png" width="400">
+  <div class="wokwi-open-btn">
+    <a class="btn-outline" href="https://wokwi.com/projects/460857399417980929" target="_blank">
+      Open Full Simulator ↗
+    </a>
+  </div>
 
-<h2>Arduino Code</h2>
-<pre>
-void setup() {
- pinMode(13, OUTPUT);
+  <!-- Code Panel -->
+  <div class="code-panel" style="margin-top:2rem;">
+    <pre><span class="cm">// SmartSys — Arduino Multi-Function System</span>
+<span class="kw">#include</span> <span class="str">&lt;LiquidCrystal_I2C.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;Servo.h&gt;</span>
+
+LiquidCrystal_I2C <span class="fn">lcd</span>(<span class="nm">0x27</span>, <span class="nm">16</span>, <span class="nm">2</span>);
+Servo door;
+
+<span class="cm">// Pins</span>
+<span class="kw">int</span> <span class="nm">ledPin</span>    = <span class="nm">13</span>;   <span class="cm">// Task 1 – LED Output</span>
+<span class="kw">int</span> <span class="nm">ldrPin</span>    = <span class="nm">A0</span>;   <span class="cm">// Task 6 – LDR Light Sensor</span>
+<span class="kw">int</span> <span class="nm">tempPin</span>   = <span class="nm">A1</span>;   <span class="cm">// Task 7 – Temperature Sensor</span>
+<span class="kw">int</span> <span class="nm">buttonPin</span> = <span class="nm">2</span>;    <span class="cm">// Task 3 – Button Input</span>
+<span class="kw">int</span> <span class="nm">buzzer</span>    = <span class="nm">8</span>;    <span class="cm">// Task 4 – Buzzer Alert</span>
+<span class="cm">// Servo on pin 9  → Task 8 – Servo Motor</span>
+<span class="cm">// LCD I2C        → Task 5 – Display</span>
+
+<span class="kw">bool</span> doorOpen = <span class="nm">false</span>;
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  <span class="fn">pinMode</span>(ledPin,    OUTPUT);
+  <span class="fn">pinMode</span>(buttonPin, INPUT_PULLUP);
+  <span class="fn">pinMode</span>(buzzer,    OUTPUT);
+  door.<span class="fn">attach</span>(<span class="nm">9</span>);
+  lcd.<span class="fn">init</span>(); lcd.<span class="fn">backlight</span>();
+  lcd.<span class="fn">print</span>(<span class="str">"Smart System"</span>);
+  <span class="fn">delay</span>(<span class="nm">2000</span>); lcd.<span class="fn">clear</span>();
 }
 
-void loop() {
- digitalWrite(13, HIGH);
- delay(1000);
- digitalWrite(13, LOW);
- delay(1000);
-}
-</pre>
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="cm">// 🌙 LDR → LED auto control</span>
+  <span class="kw">int</span> light = <span class="fn">analogRead</span>(ldrPin);
+  <span class="fn">digitalWrite</span>(ledPin, light &lt; <span class="nm">500</span> ? HIGH : LOW);
 
+  <span class="cm">// 🌡️ TMP36 → Temperature</span>
+  <span class="kw">float</span> tempC = <span class="fn">analogRead</span>(tempPin) * (<span class="nm">5.0</span>/<span class="nm">1023.0</span>) * <span class="nm">100</span>;
+
+  <span class="cm">// 🚨 Buzzer alert if temp &gt; 35°C</span>
+  tempC &gt; <span class="nm">35</span> ? <span class="fn">tone</span>(buzzer, <span class="nm">1000</span>) : <span class="fn">noTone</span>(buzzer);
+
+  <span class="cm">// 🔘 Button toggles door servo</span>
+  <span class="kw">if</span> (<span class="fn">digitalRead</span>(buttonPin) == LOW) { doorOpen = !doorOpen; <span class="fn">delay</span>(<span class="nm">300</span>); }
+  door.<span class="fn">write</span>(doorOpen ? <span class="nm">90</span> : <span class="nm">0</span>);
+
+  <span class="cm">// 📟 Update LCD</span>
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>,<span class="nm">0</span>); lcd.<span class="fn">print</span>(<span class="str">"Temp:"</span>); lcd.<span class="fn">print</span>(tempC); lcd.<span class="fn">print</span>(<span class="str">"C "</span>);
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>,<span class="nm">1</span>); lcd.<span class="fn">print</span>(<span class="str">"Light:"</span>); lcd.<span class="fn">print</span>(light);
+  <span class="fn">delay</span>(<span class="nm">500</span>);
+}</pre>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- TASKS -->
+<section class="tasks-section" id="tasks">
+  <p class="section-label">System Overview</p>
+  <h2 class="section-title">8 Embedded<br/>System Tasks</h2>
+  <p class="section-desc">Each task maps to a real-world embedded use case, all unified in a single Arduino program.</p>
+
+  <div class="tasks-grid">
+
+    <!-- Task 1 -->
+    <div class="task-card" style="--card-accent: #00d4ff;">
+      <div class="task-num">TASK 01 / 08</div>
+      <span class="task-icon">💡</span>
+      <div class="task-title">Basic Output Control</div>
+      <p class="task-desc">An LED connected to pin 13 acts as an automatic indicator light, turning on or off based on system logic.</p>
+      <div class="task-tags">
+        <span class="tag">LED</span>
+        <span class="tag">Pin 13</span>
+        <span class="tag">digitalWrite</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>LED activates automatically when the LDR detects darkness (light &lt; 500), mirroring street lighting and indicator panel systems.</p>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="task-card" style="--card-accent: #7c3aed;">
+      <div class="task-num">TASK 02 / 08</div>
+      <span class="task-icon">🎚️</span>
+      <div class="task-title">Variable Control System</div>
+      <p class="task-desc">Analog sensor values are continuously read and mapped to dynamic system behaviors — no fixed on/off states.</p>
+      <div class="task-tags">
+        <span class="tag">analogRead</span>
+        <span class="tag">LDR</span>
+        <span class="tag">TMP36</span>
+        <span class="tag">A0 / A1</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>Both the LDR and TMP36 produce variable 0–1023 analog values, enabling gradient-based control of the LED and buzzer threshold.</p>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="task-card" style="--card-accent: #f59e0b;">
+      <div class="task-num">TASK 03 / 08</div>
+      <span class="task-icon">🔘</span>
+      <div class="task-title">User Interaction System</div>
+      <p class="task-desc">A physical pushbutton lets the user manually override the door/servo position through toggle logic.</p>
+      <div class="task-tags">
+        <span class="tag">Button</span>
+        <span class="tag">Pin 2</span>
+        <span class="tag">INPUT_PULLUP</span>
+        <span class="tag">Toggle</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>Button on pin 2 with INPUT_PULLUP. Each LOW press toggles <code style="color:var(--accent);font-family:var(--font-mono);">doorOpen</code>, simulating an access control panel.</p>
+      </div>
+    </div>
+
+    <!-- Task 4 -->
+    <div class="task-card" style="--card-accent: #ef4444;">
+      <div class="task-num">TASK 04 / 08</div>
+      <span class="task-icon">🚨</span>
+      <div class="task-title">Alert / Notification System</div>
+      <p class="task-desc">A piezo buzzer triggers a continuous 1kHz tone whenever the temperature exceeds a safe threshold.</p>
+      <div class="task-tags">
+        <span class="tag">Buzzer</span>
+        <span class="tag">Pin 8</span>
+        <span class="tag">tone()</span>
+        <span class="tag">1000 Hz</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>If <code style="color:var(--accent);font-family:var(--font-mono);">tempC &gt; 35</code>, <code style="color:var(--accent);font-family:var(--font-mono);">tone(buzzer, 1000)</code> fires — an industrial overheat alert modelled in miniature.</p>
+      </div>
+    </div>
+
+    <!-- Task 5 -->
+    <div class="task-card" style="--card-accent: #10b981;">
+      <div class="task-num">TASK 05 / 08</div>
+      <span class="task-icon">📟</span>
+      <div class="task-title">Display / Information System</div>
+      <p class="task-desc">A 16×2 I2C LCD displays live temperature and light level readings — a real-time monitoring dashboard.</p>
+      <div class="task-tags">
+        <span class="tag">LCD I2C</span>
+        <span class="tag">0x27</span>
+        <span class="tag">16×2</span>
+        <span class="tag">LiquidCrystal</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>Row 0 shows <code style="color:var(--accent);font-family:var(--font-mono);">Temp: XX.X C</code>, Row 1 shows <code style="color:var(--accent);font-family:var(--font-mono);">Light: XXXX</code>, updated every 500 ms.</p>
+      </div>
+    </div>
+
+    <!-- Task 6 -->
+    <div class="task-card" style="--card-accent: #06b6d4;">
+      <div class="task-num">TASK 06 / 08</div>
+      <span class="task-icon">☀️</span>
+      <div class="task-title">Environmental Sensing</div>
+      <p class="task-desc">An LDR photoresistor continuously senses ambient light levels, enabling automatic responses to lighting conditions.</p>
+      <div class="task-tags">
+        <span class="tag">LDR</span>
+        <span class="tag">A0</span>
+        <span class="tag">Photoresistor</span>
+        <span class="tag">Smart City</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>Analog pin A0 reads LDR resistance changes as voltage — the foundation of smart street lights and energy-saving automation.</p>
+      </div>
+    </div>
+
+    <!-- Task 7 -->
+    <div class="task-card" style="--card-accent: #f97316;">
+      <div class="task-num">TASK 07 / 08</div>
+      <span class="task-icon">🌡️</span>
+      <div class="task-title">Monitoring System</div>
+      <p class="task-desc">A TMP36 temperature sensor provides continuous thermal monitoring with voltage-to-Celsius conversion.</p>
+      <div class="task-tags">
+        <span class="tag">TMP36</span>
+        <span class="tag">A1</span>
+        <span class="tag">5V Reference</span>
+        <span class="tag">Thermal</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p>Formula: <code style="color:var(--accent);font-family:var(--font-mono);">V × 100 = °C</code> where V = ADC × 5/1023. Perfect for smart home / industrial HVAC control.</p>
+      </div>
+    </div>
+
+    <!-- Task 8 -->
+    <div class="task-card" style="--card-accent: #8b5cf6;">
+      <div class="task-num">TASK 08 / 08</div>
+      <span class="task-icon">⚙️</span>
+      <div class="task-title">Motion / Actuation System</div>
+      <p class="task-desc">A servo motor rotates between 0° and 90° to physically open or close a door mechanism.</p>
+      <div class="task-tags">
+        <span class="tag">Servo</span>
+        <span class="tag">Pin 9</span>
+        <span class="tag">PWM</span>
+        <span class="tag">0–90°</span>
+      </div>
+      <div class="task-impl">
+        <div class="task-impl-label">Implementation</div>
+        <p><code style="color:var(--accent);font-family:var(--font-mono);">door.write(90)</code> opens, <code style="color:var(--accent);font-family:var(--font-mono);">door.write(0)</code> closes — mimicking automated gate, lock, or robotic arm positioning.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- COMPONENTS -->
+<section class="circuit-section" id="components">
+  <div class="circuit-inner">
+    <p class="section-label">Hardware</p>
+    <h2 class="section-title">Components & Pinout</h2>
+    <p class="section-desc">Every component in the Wokwi circuit and its role in the system.</p>
+
+    <div class="components-grid">
+      <div class="component-card">
+        <span class="component-icon">🔵</span>
+        <div class="component-name">Arduino UNO</div>
+        <div class="component-role">Microcontroller</div>
+        <div class="component-pin">ATmega328P</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">💡</span>
+        <div class="component-name">LED</div>
+        <div class="component-role">Output Indicator</div>
+        <div class="component-pin">Pin 13 → GND</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">☀️</span>
+        <div class="component-name">LDR</div>
+        <div class="component-role">Light Sensor</div>
+        <div class="component-pin">Analog A0</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">🌡️</span>
+        <div class="component-name">TMP36</div>
+        <div class="component-role">Temperature Sensor</div>
+        <div class="component-pin">Analog A1</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">🔘</span>
+        <div class="component-name">Button</div>
+        <div class="component-role">User Input</div>
+        <div class="component-pin">Pin 2 (PULLUP)</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">🔊</span>
+        <div class="component-name">Buzzer</div>
+        <div class="component-role">Alert Output</div>
+        <div class="component-pin">Pin 8 → GND</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">⚙️</span>
+        <div class="component-name">Servo SG90</div>
+        <div class="component-role">Motion Actuator</div>
+        <div class="component-pin">PWM Pin 9</div>
+      </div>
+      <div class="component-card">
+        <span class="component-icon">📟</span>
+        <div class="component-name">LCD 16×2</div>
+        <div class="component-role">Display</div>
+        <div class="component-pin">I2C 0x27</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLOW LOGIC -->
+<section class="flow-section" id="flow">
+  <p class="section-label">Logic Architecture</p>
+  <h2 class="section-title">System Loop Flow</h2>
+  <p class="section-desc">How the Arduino main loop processes each sensor and drives each output every 500 ms.</p>
+
+  <div class="flow-diagram">
+    <!-- Row 1 -->
+    <div class="flow-row" style="margin-bottom:1rem;">
+      <div class="flow-box accent">
+        <span class="flow-box-icon">🔁</span>
+        <div class="flow-box-title">loop() Start</div>
+        <div class="flow-box-sub">every 500 ms</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <span class="flow-box-icon">☀️</span>
+        <div class="flow-box-title">Read LDR</div>
+        <div class="flow-box-sub">analogRead(A0)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <span class="flow-box-icon">💡</span>
+        <div class="flow-box-title">LED Control</div>
+        <div class="flow-box-sub">light &lt; 500?</div>
+      </div>
+    </div>
+    <!-- Row 2 -->
+    <div class="flow-row" style="margin-bottom:1rem; padding-left:2rem;">
+      <div class="flow-box">
+        <span class="flow-box-icon">🌡️</span>
+        <div class="flow-box-title">Read TMP36</div>
+        <div class="flow-box-sub">analogRead(A1)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <span class="flow-box-icon">🔢</span>
+        <div class="flow-box-title">Convert °C</div>
+        <div class="flow-box-sub">V × 100 = °C</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <span class="flow-box-icon">🚨</span>
+        <div class="flow-box-title">Buzzer Alert</div>
+        <div class="flow-box-sub">tempC &gt; 35?</div>
+      </div>
+    </div>
+    <!-- Row 3 -->
+    <div class="flow-row" style="padding-left:4rem;">
+      <div class="flow-box">
+        <span class="flow-box-icon">🔘</span>
+        <div class="flow-box-title">Read Button</div>
+        <div class="flow-box-sub">digitalRead(2)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <span class="flow-box-icon">⚙️</span>
+        <div class="flow-box-title">Servo Toggle</div>
+        <div class="flow-box-sub">0° or 90°</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box accent">
+        <span class="flow-box-icon">📟</span>
+        <div class="flow-box-title">Update LCD</div>
+        <div class="flow-box-sub">Temp + Light</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SmartSys</div>
+  <p class="footer-sub">Arduino Embedded Systems — 8 Tasks · 1 Platform</p>
+  <div class="footer-links">
+    <a href="https://wokwi.com/projects/460857399417980929" target="_blank">Wokwi Simulation ↗</a>
+    <a href="#simulator">Simulator</a>
+    <a href="#tasks">Tasks</a>
+    <a href="#components">Hardware</a>
+    <a href="#flow">Logic</a>
+  </div>
+  <p class="footer-copy">Built with Arduino · Simulated on Wokwi · Designed for GitHub Pages</p>
+</footer>
+
+<script>
+  // Intersection Observer for scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animationPlayState = 'running';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.task-card, .component-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+
+  // Animate cards on scroll
+  const cardObserver = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'translateY(0)';
+        }, (Array.from(e.target.parentElement.children).indexOf(e.target)) * 80);
+        cardObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.task-card, .component-card').forEach(el => {
+    cardObserver.observe(el);
+  });
+</script>
 </body>
 </html>
